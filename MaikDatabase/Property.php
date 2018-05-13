@@ -1,4 +1,7 @@
 <?php
+/**
+ * @author Maicon Gonzales<maicon@maiscontrole.net>
+ */
 namespace MaikDatabase;
 
 abstract class Property {

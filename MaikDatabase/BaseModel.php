@@ -1,7 +1,11 @@
 <?php
+/**
+ * @author Maicon Gonzales<maicon@maiscontrole.net>
+ */
 namespace MaikDatabase;
 
 use MaikDatabase\Database\Database;
+use MaikDatabase\Database\SetsBuilder;
 
 class BaseModel extends Property {
 
@@ -61,6 +65,10 @@ class BaseModel extends Property {
         $this->___hasJoin[$Model] = $array;
     }
 
+    public function addOnJoin($Model, $key, $array){
+        $this->___hasJoin[$Model][$key] = $array;
+    }
+
     public function getTableSelect(){
         return $this->___table_name." ".$this->___alias;
     }
@@ -115,6 +123,13 @@ class BaseModel extends Property {
 
     public function getPagination(){
         return $this->___Pagination;
+    }
+
+    /**
+     * @return SetsBuilder SetsBuilder class
+     */
+    public function setBuilder(){
+        return new SetsBuilder();
     }
 
     /**
@@ -175,6 +190,7 @@ class BaseModel extends Property {
         }
 
         $OrderKey = isset($other["orderby"]) ? " ".$other["orderby"] : " ASC";
+
         $OrderColun = isset($other["ordercol"]) ? $this->___aliasConsult[$this->getColunAlias($other["ordercol"])] : $this->___aliasConsult[$this->getColunAlias($this->___primary)];
         $GroupColun = isset($other["groupcol"]) ? $this->___aliasConsult[$this->getColunAlias($other["groupcol"])] : $this->___aliasConsult[$this->getColunAlias($this->___primary)];
 
@@ -202,14 +218,14 @@ class BaseModel extends Property {
                 }
             }
             $Query = str_replace(array_keys($otherWhere['coluns']), $Values,$otherWhere['query']);
-            $Where .= "WHERE ".$Query;
+            $Where .= " WHERE ".$Query;
 
             $BindValues = array_merge($BindValues, $otherWhere['bind']);
         }
 
 
 
-        if (isset($other['pagination'])){
+        if (isset($other['pagination']) && is_array($other['pagination'])){
             $PerPage = isset($other['pagination']['per_page']) ? $other['pagination']['per_page'] : 10;
             $Page = isset($other['pagination']['page'])? $other['pagination']['page'] : 1;
 
@@ -230,6 +246,18 @@ class BaseModel extends Property {
             $start = $offset;
             $end = min(($offset + $PerPage), $Total);
             $Limit = "LIMIT ".$start.",".$end;
+
+            $Start = $this->___Pagination["page"] - 5;
+            $End = $this->___Pagination["page"] + 5;
+            if ($Start <= 0){
+                $Start = 1;
+                $End += 5 - $this->___Pagination["page"];
+            }
+            if ($End > $this->___Pagination["total_page"]){
+                $End = $this->___Pagination["total_page"];
+            }
+            $this->___Pagination['start_on'] = $Start;
+            $this->___Pagination['end_on'] = $End;
         }
 
         $this->___SqlQuery = "SELECT " . implode(', ',$Fields) . " FROM " . $this->getTableSelect() . implode(' ', $Joins) . $Where. $GroupBy . $OrderBy ." ".$Limit;
@@ -255,12 +283,12 @@ class BaseModel extends Property {
                     $Model = $Property["class"];
                     $Class = new $Model();
                     $Find = "findBy".$Property['foreign'];
-                    $Data[$join] = $Class->$Find($Data[$Property['local']]);
+                    $others = isset($Property["other"]) ? $Property["other"] : null;
+                    $Data[$join] = $Class->$Find($Data[$Property['local']],$others);
                 }
             }
             $rows[] = $Data;
         }
-
         return $rows;
     }
 
@@ -357,7 +385,6 @@ class BaseModel extends Property {
                 }
                 $rows[] = $Data;
             }
-
             return $rows;
         }
     }
@@ -468,7 +495,7 @@ class BaseModel extends Property {
     }
 
     public function alias() {
-        $lmin = 'abcdefghijklmnopqrstuvwxyz';
+        $lmin = 'bcdfghjklmnpqrstvwxyz';
         $retorno = '';
         $caracteres = $lmin;
 

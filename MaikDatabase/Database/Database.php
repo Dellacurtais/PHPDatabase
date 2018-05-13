@@ -1,4 +1,7 @@
 <?php
+/**
+ * @author Maicon Gonzales<maicon@maiscontrole.net>
+ */
 namespace MaikDatabase\Database;
 
 use MaikDatabase\Generate;
