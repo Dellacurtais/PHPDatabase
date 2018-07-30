@@ -3,7 +3,7 @@ Database ORM - Beta
 
 
 # ToDo
--count
--findOneBy Clausulas
+  - count
+  - findOneBy Clausulas
 
 
